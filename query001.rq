@@ -1,0 +1,21 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX :    <http://steveroggenkamp.com/kycrashdata/>
+PREFIX a:   <http://steveroggenkamp.com/kycrashdata/attrs/>
+PREFIX counties:   <http://steveroggenkamp.com/kycrashdata/counties/>
+PREFIX collman:   <http://steveroggenkamp.com/kycrashdata/collman/>
+PREFIX injsev:   <http://steveroggenkamp.com/kycrashdata/injsev/>
+PREFIX lgtcond:   <http://steveroggenkamp.com/kycrashdata/lgtcond/>
+PREFIX lnduse:   <http://steveroggenkamp.com/kycrashdata/lnduse/>
+PREFIX persontype: <http://steveroggenkamp.com/kycrashdata/persontype/>
+PREFIX rdcond:   <http://steveroggenkamp.com/kycrashdata/rdcond/>
+PREFIX rdsurf:   <http://steveroggenkamp.com/kycrashdata/rdsurf/>
+PREFIX wxcond:   <http://steveroggenkamp.com/kycrashdata/wxcond/>
+
+SELECT (COUNT(?person) as ?crashes) ?injury ?injdesc
+WHERE { ?person a:persontype <persontype:05> .
+	?person a:injurySeverity ?injury .
+	?injury a:description $injdesc .
+ }
+GROUP By ?injury
+ORDER BY ?injury
+#E0Q

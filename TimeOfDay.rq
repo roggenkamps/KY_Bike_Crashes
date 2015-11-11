@@ -1,0 +1,22 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX :    <http://steveroggenkamp.com/kycrashdata/>
+PREFIX a:   <http://steveroggenkamp.com/kycrashdata/attrs/>
+PREFIX counties:   <http://steveroggenkamp.com/kycrashdata/counties/>
+PREFIX collman:   <http://steveroggenkamp.com/kycrashdata/collman/>
+PREFIX injsev:   <http://steveroggenkamp.com/kycrashdata/injsev/>
+PREFIX lgtcond:   <http://steveroggenkamp.com/kycrashdata/lgtcond/>
+PREFIX lnduse:   <http://steveroggenkamp.com/kycrashdata/lnduse/>
+PREFIX persontype: <http://steveroggenkamp.com/kycrashdata/persontype/>
+
+SELECT ?crash ?hour
+WHERE {
+      SELECT ?crash (SUBSTR(?timeOfDay,1,2) AS ?hour)
+      WHERE { ?crash  a:involvedUnit ?unit .
+      	      ?crash  a:time         ?timeOfDay .
+	      ?unit   a:unitType   <unittype:01> 
+	     }
+      ORDER BY ?timeOfDay
+}
+#GROUP By ?hour
+ORDER BY ?hour
+#E0Q

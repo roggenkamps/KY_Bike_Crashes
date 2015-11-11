@@ -1,0 +1,14 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX :    <http://steveroggenkamp.com/kycrashdata/>
+PREFIX a:   <http://steveroggenkamp.com/kycrashdata/attrs/>
+PREFIX injsev:   <http://steveroggenkamp.com/kycrashdata/injsev/>
+
+SELECT (COUNT(?crash) as ?crashes) ?injury ?injdesc
+WHERE { ?crash  a:involvedUnit ?unit .
+        ?unit   a:involvesPerson ?person .
+	?person a:injurySeverity ?injury .
+	?injury a:description $injdesc .
+ }
+GROUP By ?injury
+ORDER BY ?injury
+#E0Q

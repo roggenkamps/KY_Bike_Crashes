@@ -1,0 +1,11 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX :    <http://steveroggenkamp.com/kycrashdata/>
+PREFIX a:   <http://steveroggenkamp.com/kycrashdata/attrs/>
+
+SELECT ?age (COUNT( ?age ) as ?number)
+WHERE { ?person <a:persontype>     ?ptype .
+	?ptype  <a:description>    "BICYCLIST" .
+        ?person <a:personAge>      ?age .
+ }
+GROUP By ?age ?number
+ORDER BY ?age ?number

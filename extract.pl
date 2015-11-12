@@ -356,40 +356,25 @@ $NODATA = 'nodata';
 
 $prefix = "http://steveroggenkamp.com/kycrashdata";
 
-printf( "\@prefix : <$prefix/> .\n" );
-printf( "\@prefix a: <$prefix/attrs/> .\n");
-printf( "\@prefix chemtests: <$prefix/chemtests/> .\n");
-printf( "\@prefix chemtestmod: <$prefix/chemtestmod/> .\n");
-printf( "\@prefix collman: <$prefix/collman/> .\n");
-printf( "\@prefix collobj: <$prefix/collobj/> .\n");
-printf( "\@prefix counties: <$prefix/counties/> .\n");
-printf( "\@prefix envfactors: <$prefix/envfactors/> .\n");
-printf( "\@prefix humfactors: <$prefix/humfactors/> .\n");
-printf( "\@prefix injloc: <$prefix/injloc/> .\n");
-printf( "\@prefix injsev: <$prefix/injsev/> .\n");
-printf( "\@prefix lightcond: <$prefix/lightcond/> .\n");
-printf( "\@prefix lnduse: <$prefix/lnduse/> .\n");
-printf( "\@prefix locfevt: <$prefix/locfevt/> .\n");
-printf( "\@prefix pedfactors: <$prefix/pedfactors/> .\n");
-printf( "\@prefix persontype: <$prefix/persontype/> .\n");
-printf( "\@prefix precollaction: <$prefix/precollaction/> .\n");
-printf( "\@prefix roadchar: <$prefix/roadchar/> .\n");
-printf( "\@prefix roadcond: <$prefix/roadcond/> .\n");
-printf( "\@prefix roadsurf: <$prefix/roadsurf/> .\n");
-printf( "\@prefix roadtype: <$prefix/roadtype/> .\n");
-printf( "\@prefix testedfor: <$prefix/testedfor/> .\n");
-printf( "\@prefix unittype: <$prefix/unittype/> .\n");
-printf( "\@prefix vehfactors: <$prefix/vehfactors/> .\n");
-printf( "\@prefix viocode: <$prefix/viocodes/> .\n");
-printf( "\@prefix wxcond: <$prefix/wxcond/> .\n");
+$outfilePrefix = $ARGV[0];   # 
+$nTriplesOut   = 0;          # number of triples generated
+$nFileTriples  = 1000000;    # number of triples per output file
+$fileNum       = 0;          # output file number
 
+$outfilePrefix =~ s/\.[^.]*$//;
+$outfileName   = sprintf("%s_%03d.ttl", $outfilePrefix, fileNum );
 
-#foreach $key (sort keys(%collobj)) {
-#    printf( "<:collobj/$key> a:description \"$collobj{$key}\".\n" );
-#}
+open( OUTFILE, ">$outfileName" ) || die "Could not open $outfileName";
+
+# printf("output file pattern: %s\n", $outfileName );
+
+# exit(0);
+printf( "generating $outfileName " );
+
+&outputPrefixes;
 
 &outputCodes( "chemtests",     \%chemicalTests );
-&outputCodes( "chemtestmod",     \%chemtestmod );
+&outputCodes( "chemtestmod",   \%chemtestmod );
 &outputCodes( "collman",       \%collisionManners );
 &outputCodes( "collobj",       \%collobj );
 &outputCodes( "envfactors",    \%environmentalFactors );
@@ -411,6 +396,16 @@ printf( "\@prefix wxcond: <$prefix/wxcond/> .\n");
 &outputCodes( "wxfactors",     \%weatherFactors );
 
 while (<>) {
+    if ( $nTriplesOut > $nFileTriples ) {
+	close( OUTFILE );
+        printf( "%7d triples\n", $nTriplesOut );
+	$fileNum++;
+	$outfileName   = sprintf("%s_%03d.ttl", $outfilePrefix, $fileNum );
+	open( OUTFILE, ">$outfileName" ) || die "Could not open $outfileName";
+	printf( "generating $outfileName " );
+	$nTriplesOut = 0;
+	&outputPrefixes;
+    }
     if ( m/^01/ ) {
 	&collisionRecord( $_ );
     } elsif ( m/^02/ ) {
@@ -442,6 +437,10 @@ while (<>) {
 #    print
 }
 
+printf( "%7d triples\n", $nTriplesOut );
+
+exit(0);
+
 sub chemTestRecord {
     local($inrec) = @_;
     local($masterid)       = &getfield($inrec,   2,   8 );
@@ -451,9 +450,10 @@ sub chemTestRecord {
     local($unitId) = $masterid . "U" . $unitNumCode;
     local($personId) = $unitId . "P". $personNumber;
     if ( $chemTest != $NODATA ) {
-	printf( "<:persons/$personId>\n" );
+	printf(OUTFILE "<:persons/$personId>\n" );
 	outputLnkAttr( "a", "chemtest", "chemtests", $chemTest ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -466,9 +466,10 @@ sub chemTestMODRecord {
     local($unitId) = $masterid . "U" . $unitNumCode;
     local($personId) = $unitId . "P". $personNumber;
     if ( $chemTestMOD != $NODATA ) {
-	printf( "<:persons/$personId>\n" );
+	printf( OUTFILE  "<:persons/$personId>\n" );
 	outputLnkAttr( "a", "chemtestmod", "chemtestmod", $chemTestMOD ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -481,9 +482,10 @@ sub citationRecord {
     local($unitId) = $masterid . "U" . $unitNumCode;
     local($personId) = $unitId . "P". $personNumber;
     if ( $citation != $NODATA ) {
-	printf( "<:persons/$personId>\n" );
+	printf( OUTFILE  "<:persons/$personId>\n" );
 	outputStrAttr( "a", "citation", $citation ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -517,7 +519,7 @@ sub collisionRecord {
     local($schoolBusCode)  = &getfield($inrec, 574,   2 );
     local($firstAid)       = &getfield($inrec, 576,   1 );
 
-    printf( "<:collision/$masterid>\n" );
+    printf( OUTFILE  "<:collision/$masterid>\n" );
     outputStrAttr( "a", "date", $date );
     outputStrAttr( "a", "time", $time );
     outputStrAttr( "a", "intersection", $intersection );
@@ -541,9 +543,8 @@ sub collisionRecord {
     outputLnkAttr( "a", "lightCond",   "lightcond",$lightCond );
     outputLnkAttr( "a", "landUse",     "landuse",  $landUseCode );
     outputStrAttr( "a", "firstaid",   $firstAid );
-
-    outputStrAttr( "a", "firstaid", $firstAid );
-    printf( ".\n" );
+#    outputStrAttr( "a", "firstaid", $firstAid );
+    printf( OUTFILE  ".\n" );
 }
 
 sub environmentalFactorRecord {
@@ -553,9 +554,10 @@ sub environmentalFactorRecord {
     local($envfactor) = &getfield($inrec,  15,   2 );
     local($unitId) = $masterid . "U" . $unitNumCode;
     if ( $envfactor != $NODATA ) {
-	printf( "<:unit/$unitId>\n" );
+	printf( OUTFILE  "<:unit/$unitId>\n" );
 	outputLnkAttr( "a", "envfactor", "envfactors",$envfactor ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -566,9 +568,10 @@ sub humanFactorRecord {
     local($humfactor) = &getfield($inrec,  15,   2 );
     local($unitId) = $masterid . "U" . $unitNumCode;
     if ( $humfactor != $NODATA ) {
-	printf( "<:unit/$unitId>\n" );
+	printf( OUTFILE  "<:unit/$unitId>\n" );
 	outputLnkAttr( "a", "humfactor", "humfactors",$humfactor ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -579,9 +582,10 @@ sub pedestrianRecord {
     local($pedfactor) = &getfield($inrec,  15,   2 );
     local($unitId) = $masterid . "U" . $unitNumCode;
     if ( $pedfactor != $NODATA ) {
-	printf( "<:unit/$unitId>\n" );
+	printf( OUTFILE  "<:unit/$unitId>\n" );
 	outputLnkAttr( "a", "pedfactor", "pedfactors",$pedfactor ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -612,8 +616,8 @@ sub personRecord {
 	 $injuryLocCode != $NODATA ||
 	 $restraintCode != $NODATA
 	) {
-	printf( "<:unit/$unitId> <a:involvesPerson> <:persons/$personId>.\n" );
-	printf( "<:persons/$personId>\n" );
+	printf( OUTFILE  "<:unit/$unitId> <a:involvesPerson> <:persons/$personId>.\n" );
+	printf( OUTFILE  "<:persons/$personId>\n" );
 	outputLnkAttr( "a", "persontype", "persontype",$personTypeCode );
 	outputNumAttr( "a", "personAge", $personAge );
 	outputStrAttr( "a", "gender", $gender );
@@ -624,7 +628,8 @@ sub personRecord {
 	outputStrAttr( "a", "chemsupected", $chemSusp );
 	outputLnkAttr( "a", "chemtest", "chemtest",$chemTestCode );
 	outputStrAttr( "a", "chemtestres", $chemTestRes );
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -633,9 +638,10 @@ sub roadTypeRecord {
     local($masterid) = &getfield($inrec,   2,   8 );
     local($roadtype) = &getfield($inrec,  15,   2 );
     if ( $roadtype != $NODATA ) {
-	printf( "<:collision/$masterid>\n" );
+	printf( OUTFILE  "<:collision/$masterid>\n" );
 	outputLnkAttr( "a", "roadtype", "roadtype",$roadtype ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -644,9 +650,10 @@ sub trafficControlRecord {
     local($masterid) = &getfield($inrec,   2,   8 );
     local($traffic)  = &getfield($inrec,  15,   2 );
     if ( $traffic != $NODATA ) {
-	printf( "<:collision/$masterid>\n" );
+	printf( OUTFILE  "<:collision/$masterid>\n" );
 	outputLnkAttr( "a", "trafficctl", "trafficctl",$traffic ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -661,15 +668,16 @@ sub unitRecord {
     local($sndEventCollCode) = &getfield($inrec,  30,   2 );
 
     $unitId = $masterid . "U" . $unitNumCode;
-    printf( "<:collision/$masterid> a:involvedUnit <:unit/$unitId>.\n" );
-    printf( "<:unit/$unitId>\n" );
+    printf( OUTFILE  "<:collision/$masterid> a:involvedUnit <:unit/$unitId>.\n" );
+    printf( OUTFILE  "<:unit/$unitId>\n" );
     outputStrAttr( "a", "unitNum", $unitNumCode );
     outputLnkAttr( "a", "unitType", "unittype", $unitTypeCode );
     outputNumAttr( "a", "numOccupants", $numOccupants );
     outputLnkAttr( "a", "preCollAction", "precolacts", $precollAction );
     outputLnkAttr( "a", "firstCollisionWith", "collobj", $fstEventCollCode );
     outputLnkAttr( "a", "secondCollisionWith", "collobj", $sndEventCollCode );
-    printf( ".\n" );
+    printf( OUTFILE  ".\n" );
+    $nTriplesOut++;
 }
 
 sub vehicleFactorRecord {
@@ -679,9 +687,10 @@ sub vehicleFactorRecord {
     local($vehfactor) = &getfield($inrec,  15,   2 );
     local($unitId) = $masterid . "U" . $unitNumCode;
     if ( $vehfactor != $NODATA ) {
-	printf( "<:unit/$unitId>\n" );
+	printf( OUTFILE  "<:unit/$unitId>\n" );
 	outputLnkAttr( "a", "vehfactor", "vehfactors",$vehfactor ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -694,9 +703,10 @@ sub violationRecord {
     local($unitId) = $masterid . "U" . $unitNumCode;
     local($personId) = $unitId . "P". $personNumber;
     if ( $vioCode != $NODATA ) {
-	printf( "<:persons/$personId>\n" );
+	printf( OUTFILE  "<:persons/$personId>\n" );
 	outputLnkAttr( "a", "violation", "viocode",$violationCode ); 
-	printf( ".\n" );
+	printf( OUTFILE  ".\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -712,14 +722,16 @@ sub getfield {
 sub outputStrAttr {
     ($ns, $fld, $val ) = @_;
     if ( $val != $NODATA ) {
-	printf("  <$ns:$fld> \"$val\";\n" );
+	printf( OUTFILE "  <$ns:$fld> \"$val\";\n" );
+	$nTriplesOut++;
     }
 }
 
 sub outputNumAttr {
     ($ns, $fld, $val ) = @_;
     if ( $val != $NODATA ) {
-	printf("  <$ns:$fld> $val;\n" );
+	printf( OUTFILE "  <$ns:$fld> $val;\n" );
+	$nTriplesOut++;
     }
 }
 
@@ -727,13 +739,44 @@ sub outputLnkAttr {
     ($ns1, $fld, $ns2,$val ) = @_;
     if ( $val != $NODATA ) {
 	$val =~ s/ *$//;
-	printf("  <$ns:$fld> <$ns2:$val>;\n" );
+	printf( OUTFILE "  <$ns:$fld> <$ns2:$val>;\n" );
+	$nTriplesOut++;
     }
 }
 
 sub outputCodes {
     ($path, $arr) = @_;
     foreach $key (sort keys($arr)) {
-	printf( "<$path:$key> <a:description> \"$$arr{$key}\".\n" );
+	printf( OUTFILE  "<$path:$key> <a:description> \"$$arr{$key}\".\n" );
+	$nTriplesOut++;
     }
+}
+
+sub outputPrefixes {
+    printf( OUTFILE  "\@prefix : <$prefix/> .\n" );
+    printf( OUTFILE  "\@prefix a: <$prefix/attrs/> .\n");
+    printf( OUTFILE  "\@prefix chemtests: <$prefix/chemtests/> .\n");
+    printf( OUTFILE  "\@prefix chemtestmod: <$prefix/chemtestmod/> .\n");
+    printf( OUTFILE  "\@prefix collman: <$prefix/collman/> .\n");
+    printf( OUTFILE  "\@prefix collobj: <$prefix/collobj/> .\n");
+    printf( OUTFILE  "\@prefix counties: <$prefix/counties/> .\n");
+    printf( OUTFILE  "\@prefix envfactors: <$prefix/envfactors/> .\n");
+    printf( OUTFILE  "\@prefix humfactors: <$prefix/humfactors/> .\n");
+    printf( OUTFILE  "\@prefix injloc: <$prefix/injloc/> .\n");
+    printf( OUTFILE  "\@prefix injsev: <$prefix/injsev/> .\n");
+    printf( OUTFILE  "\@prefix lightcond: <$prefix/lightcond/> .\n");
+    printf( OUTFILE  "\@prefix lnduse: <$prefix/lnduse/> .\n");
+    printf( OUTFILE  "\@prefix locfevt: <$prefix/locfevt/> .\n");
+    printf( OUTFILE  "\@prefix pedfactors: <$prefix/pedfactors/> .\n");
+    printf( OUTFILE  "\@prefix persontype: <$prefix/persontype/> .\n");
+    printf( OUTFILE  "\@prefix precollaction: <$prefix/precollaction/> .\n");
+    printf( OUTFILE  "\@prefix roadchar: <$prefix/roadchar/> .\n");
+    printf( OUTFILE  "\@prefix roadcond: <$prefix/roadcond/> .\n");
+    printf( OUTFILE  "\@prefix roadsurf: <$prefix/roadsurf/> .\n");
+    printf( OUTFILE  "\@prefix roadtype: <$prefix/roadtype/> .\n");
+    printf( OUTFILE  "\@prefix testedfor: <$prefix/testedfor/> .\n");
+    printf( OUTFILE  "\@prefix unittype: <$prefix/unittype/> .\n");
+    printf( OUTFILE  "\@prefix vehfactors: <$prefix/vehfactors/> .\n");
+    printf( OUTFILE  "\@prefix viocode: <$prefix/viocodes/> .\n");
+    printf( OUTFILE  "\@prefix wxcond: <$prefix/wxcond/> .\n");
 }

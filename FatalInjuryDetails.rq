@@ -13,13 +13,15 @@ PREFIX unittype: <http://steveroggenkamp.com/kycrashdata/unittype/>
 PREFIX wxcond:   <http://steveroggenkamp.com/kycrashdata/wxcond/>
 
 SELECT ?person ?age ?gender ?injlocdesc 
-WHERE { ?crash  a:involvedUnit ?unit .
-        ?unit   a:involvesPerson ?person .
-	?unit   a:unitType   <unittype:01> .
-	?person a:injurySeverity <injsev:01> .
-	?person a:injuryLocation ?injloc .
-	?injloc a:description  ?injdesc .
+WHERE { ?crash  <a:involvedUnit> ?unit .
+        ?unit   <a:involvesPerson> ?person .
+	?person <a:description>    "BICYCLIST" .
+	?person <a:personAge>      ?age .
+	?person <a:gender>         ?gender .
+	?person <a:injurySeverity> ?injsev .
+	?injsev <a:description>    "FATAL" .
+	?person <a:injuryLocation> ?injloc .
+	?injloc <a:description>    ?injlocdesc .
  }
-GROUP By ?injury
-ORDER BY ?injury
-#E0Q
+GROUP By ?person
+ORDER BY ?person

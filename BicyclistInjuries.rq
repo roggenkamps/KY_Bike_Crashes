@@ -11,7 +11,8 @@ PREFIX rdcond:   <http://steveroggenkamp.com/kycrashdata/rdcond/>
 PREFIX rdsurf:   <http://steveroggenkamp.com/kycrashdata/rdsurf/>
 PREFIX wxcond:   <http://steveroggenkamp.com/kycrashdata/wxcond/>
 
-SELECT (COUNT(?person) as ?crashes) ?injury ?injdesc
+SELECT (COUNT(?person) as ?crashes) ?injdesc
+FROM <http://steveroggenkamp.com/kycrashdata/>
 WHERE { ?person <a:persontype>     ?ptype .
         ?ptype  <a:description>    "BICYCLIST" .
 	?person <a:injurySeverity> ?injury .
@@ -19,4 +20,3 @@ WHERE { ?person <a:persontype>     ?ptype .
  }
 GROUP By ?injury ?injdesc
 ORDER BY ?injury ?injdesc
-#E0Q

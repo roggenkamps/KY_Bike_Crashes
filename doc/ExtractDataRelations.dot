@@ -1,0 +1,16 @@
+digraph ServerProvisioningProcess {
+  compound=true;
+/*  label="KY Crash Extract Data Primary Relations";*/
+  label="";
+  size="6.5,6";
+
+  {
+    node [shape=ellipse];
+    collision [label="Colllision"];
+    unit      [label="Unit\n(vehicle)" ];
+    person    [label="Person" ];
+
+    collision -> unit [label=" involvedUnit"];
+    unit -> person [label=" involvesPerson"];
+  }
+}

@@ -668,7 +668,7 @@ sub unitRecord {
     local($sndEventCollCode) = &getfield($inrec,  30,   2 );
 
     $unitId = $masterid . "U" . $unitNumCode;
-    printf( OUTFILE  "<:collision/$masterid> a:involvedUnit <:unit/$unitId>.\n" );
+    printf( OUTFILE  "<:collision/$masterid> <a:involvedUnit> <:unit/$unitId>.\n" );
     printf( OUTFILE  "<:unit/$unitId>\n" );
     outputStrAttr( "a", "unitNum", $unitNumCode );
     outputLnkAttr( "a", "unitType", "unittype", $unitTypeCode );
